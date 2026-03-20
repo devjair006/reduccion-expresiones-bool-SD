@@ -4,64 +4,281 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Reduccion de Expresiones Booleanas</title>
+    <title>Trabajo de simplificacion de expresiones booleanas</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script defer src="{{ url_for('static', filename='app.js') }}"></script>
 </head>
 
 <body>
-    <main class="container">
-        <section class="panel hero">
-            <h1>Reduccion de Expresiones Booleanas</h1>
-            <p>Ingresa una expresion con entre 6 y 10 variables y obten su forma minima equivalente.</p>
-        </section>
+    <div class="ambient-glow" aria-hidden="true"></div>
 
-        <section class="panel form-panel">
-            <form method="post">
-                <label for="expression">Expresion booleana</label>
-                <textarea id="expression" name="expression" rows="5"
-                    placeholder="Ejemplo: F = A.B.C + A.B.C' + D.E.F + D.E.F'" required>{{ expression }}</textarea>
+    <div class="app-frame">
+        <aside class="side-rail">
+            <div class="brand-block card-dark">
+                <p style="color: #bfa9eb; font-size: 1rem;" class="brand-kicker">Trabajo de simplificacion de
+                    expresiones booleanas</p>
+                <h1>Control Center</h1>
+                <p class="brand-copy">Simplifica expresiones, valida equivalencia y construye evidencia matematica en
+                    segundos.</p>
+            </div>
 
-                <label class="checkbox-row" for="show_trace">
-                    <input type="checkbox" id="show_trace" name="show_trace" {% if show_trace %}checked{% endif %}>
-                    Mostrar trazabilidad paso a paso
-                </label>
+            <nav class="mini-nav card-dark" aria-label="Secciones">
+                <p>Navegacion rapida</p>
+                <a href="#editor">Editor</a>
+                <a href="#como-usar">Como usar</a>
+                <a href="#ejemplos">Ejemplos</a>
+                <a href="#resultado">Resultado</a>
+            </nav>
 
-                <button type="submit">Simplificar</button>
-            </form>
-        </section>
+            <section class="history-panel card-dark" aria-labelledby="history-title">
+                <div class="history-head">
+                    <h2 id="history-title">Historial reciente</h2>
+                    <span>{{ history | length }}/8</span>
+                </div>
 
-        {% if error %}
-        <section class="panel error">
-            <strong>Error:</strong>
-            <p>{{ error }}</p>
-        </section>
-        {% endif %}
+                {% if history %}
+                <div class="history-list">
+                    {% for entry in history %}
+                    <button type="button" class="history-item" data-expression="{{ entry.expression }}"
+                        data-min="{{ entry.min }}" data-max="{{ entry.max }}"
+                        data-equivalence="{{ 'on' if entry.check_equivalence else 'off' }}">
+                        <strong>{{ entry.expression }}</strong>
+                        <small>{{ entry.simplified }} · {{ entry.timestamp }}</small>
+                    </button>
+                    {% endfor %}
+                </div>
 
-        {% if result %}
-        <section class="panel output">
-            <h2>Resultado</h2>
-            <p><strong>Variables detectadas:</strong> {{ result.variables | join(', ') }}</p>
-            <p><strong>Entrada:</strong> {{ result.input_expression }}</p>
-            <p><strong>Expresion simplificada:</strong> <span class="final-expression">{{ result.simplified_expression
-                    }}</span></p>
-        </section>
+                <form method="post" class="clear-form">
+                    <input type="hidden" name="action" value="clear_history">
+                    <button type="submit" class="btn-subtle">Limpiar historial</button>
+                </form>
+                {% else %}
+                <p class="history-empty">Aun no hay historial. Ejecuta tu primera simplificacion y aparecera aqui.</p>
+                {% endif %}
+            </section>
+        </aside>
 
-        {% if result.trace %}
-        <section class="panel trace">
-            <h2>Trazabilidad</h2>
-            <ol>
-                {% for step in result.trace %}
-                <li>
-                    <h3>{{ step.title }}</h3>
-                    <p><strong>Expresion:</strong> {{ step.expression }}</p>
-                    <p><strong>Ley aplicada:</strong> {{ step.law }}</p>
-                </li>
-                {% endfor %}
-            </ol>
-        </section>
-        {% endif %}
-        {% endif %}
-    </main>
+        <main class="dashboard-main">
+            <header class="top-metrics card-main">
+                <div>
+                    <p class="kicker">Tablero de algebra booleana</p>
+                    <h2>Workspace de simplificacion avanzada</h2>
+                    <p>Interfaz enfocada en flujo real: entrada, configuracion, validacion y evidencia.</p>
+                </div>
+                <div class="metric-grid">
+                    <article>
+                        <span>Expresiones guardadas</span>
+                        <strong>{{ history | length }}</strong>
+                    </article>
+                    <article>
+                        <span>Rango por defecto</span>
+                        <strong>{{ min_variables }} - {{ max_variables }}</strong>
+                    </article>
+                    <article>
+                        <span>Tabla de verdad</span>
+                        <strong>{% if check_equivalence %}Activa{% else %}Inactiva{% endif %}</strong>
+                    </article>
+                </div>
+            </header>
+
+            {% if info %}
+            <section style="border-radius: 20px;" class="notice info card-main" role="status">
+                <strong>Info:</strong> {{ info }}
+            </section>
+            {% endif %}
+
+            {% if error %}
+            <section class="notice error card-main" role="alert">
+                <strong>Error:</strong> {{ error }}
+            </section>
+            {% endif %}
+
+            <section class="workspace-grid">
+                <section class="editor card-main" id="editor">
+                    <div class="panel-head">
+                        <h2>Editor de expresion</h2>
+                        <p>Usa <code>+</code>, <code>.</code>, <code>*</code>, parentesis y <code>'</code>. Solo se
+                            aceptan constantes <code>0</code> y <code>1</code>.</p>
+                    </div>
+
+                    <form method="post" novalidate>
+                        <input type="hidden" name="action" value="simplify">
+                        <label for="expression">Expresion booleana</label>
+                        <textarea id="expression" name="expression" rows="7"
+                            placeholder="Ejemplo: F = A.B.C + A.B.C' + D.E.F + D.E.F' + 0"
+                            required>{{ expression }}</textarea>
+
+                        <div class="fields-2">
+                            <div>
+                                <label for="min_variables">Minimo de variables</label>
+                                <input id="min_variables" name="min_variables" type="number" min="1"
+                                    value="{{ min_variables }}">
+                            </div>
+                            <div>
+                                <label for="max_variables">Maximo de variables</label>
+                                <input id="max_variables" name="max_variables" type="number" min="1"
+                                    value="{{ max_variables }}">
+                            </div>
+                        </div>
+
+                        <div class="toggles">
+                            <label class="toggle" for="show_trace">
+                                <input type="checkbox" id="show_trace" name="show_trace" {% if show_trace %}checked{%
+                                    endif %}>
+                                <span>
+                                    <strong>Mostrar trazabilidad</strong>
+                                    <small>Desglose de leyes usadas durante la reduccion.</small>
+                                </span>
+                            </label>
+
+                            <label class="toggle" for="check_equivalence">
+                                <input type="checkbox" id="check_equivalence" name="check_equivalence" {% if
+                                    check_equivalence %}checked{% endif %}>
+                                <span>
+                                    <strong>Validar equivalencia</strong>
+                                    <small>Compara entrada y salida en tabla de verdad.</small>
+                                </span>
+                            </label>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn-primary">Simplificar</button>
+                            <button type="button" class="btn-ghost" id="btn-load-demo">Cargar demo rapida</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="guide-collapse card-main">
+                    <button type="button" class="guide-toggle" id="guide-toggle" aria-expanded="false"
+                        aria-controls="guide-body">
+                        <span class="guide-toggle-icon">▶</span>
+                        <span><strong>¿Como se usa?</strong> — Guia rapida, ejemplos y reglas</span>
+                    </button>
+
+                    <div class="guide-body" id="guide-body">
+                        <article class="howto" id="como-usar">
+                            <h3>Pasos para simplificar</h3>
+                            <ol>
+                                <li>Escribe tu expresion booleana (con o sin <code>F = ...</code>).</li>
+                                <li>Configura el rango min/max de variables segun tu ejercicio.</li>
+                                <li>Activa trazabilidad o tabla de verdad si necesitas evidencia.</li>
+                                <li>Presiona <strong>Simplificar</strong> y revisa la salida.</li>
+                            </ol>
+                        </article>
+
+                        <article class="examples" id="ejemplos">
+                            <h3>Ejemplos recomendados</h3>
+                            <div class="example-list">
+                                {% for example in recommended_examples %}
+                                <button type="button" class="example-item" data-expression="{{ example.expression }}"
+                                    data-min="{{ example.min }}" data-max="{{ example.max }}">
+                                    <strong>{{ example.title }}</strong>
+                                    <small>{{ example.hint }}</small>
+                                </button>
+                                {% endfor %}
+                            </div>
+                        </article>
+
+                        <article class="rules">
+                            <h3>Reglas clave del algebra booleana</h3>
+                            <div class="rules-grid">
+                                <p><code>X . 0 = 0</code></p>
+                                <p><code>X . 1 = X</code></p>
+                                <p><code>X + 0 = X</code></p>
+                                <p><code>X + 1 = 1</code></p>
+                                <p><code>X + X = X</code></p>
+                                <p><code>X . X = X</code></p>
+                                <p><code>X + X' = 1</code></p>
+                                <p><code>X . X' = 0</code></p>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+            </section>
+
+            {% if result %}
+            <section class="results" id="resultado">
+                <article class="result-card card-main">
+                    <div class="panel-head row">
+                        <h2>Resultado</h2>
+                        <button type="button" class="btn-ghost" id="copy-result"
+                            data-result="{{ result.simplified_expression }}">Copiar resultado</button>
+                    </div>
+
+                    <div class="result-meta">
+                        <p><strong>Variables:</strong> {{ result.variables | join(', ') }}</p>
+                        <p><strong>Rango usado:</strong> {{ result.variable_range.min }} - {{ result.variable_range.max
+                            }}</p>
+                    </div>
+
+                    <p class="line"><strong>Entrada:</strong> <code>{{ result.input_expression }}</code></p>
+                    <p class="line"><strong>Simplificada:</strong> <span class="result-expression">{{
+                            result.simplified_expression }}</span></p>
+                </article>
+
+                {% if result.equivalence_check %}
+                <article class="equivalence card-main">
+                    <h2>Validacion de equivalencia</h2>
+                    <p class="badge {% if result.equivalence_check.is_equivalent %}ok{% else %}fail{% endif %}">
+                        {% if result.equivalence_check.is_equivalent %}
+                        Equivalente en todas las combinaciones.
+                        {% else %}
+                        Se detectaron diferencias en algunas combinaciones.
+                        {% endif %}
+                    </p>
+                    <p><strong>Filas evaluadas:</strong> {{ result.equivalence_check.total_rows }}</p>
+                    {% if result.equivalence_check.truncated %}
+                    <p><strong>Vista:</strong> mostrando {{ result.equivalence_check.displayed_rows }} filas.</p>
+                    {% endif %}
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    {% for variable in result.variables %}
+                                    <th>{{ variable }}</th>
+                                    {% endfor %}
+                                    <th>Entrada</th>
+                                    <th>Simplificada</th>
+                                    <th>Coincide</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in result.truth_table.rows %}
+                                <tr>
+                                    {% for variable in result.variables %}
+                                    <td>{{ row.values[variable] }}</td>
+                                    {% endfor %}
+                                    <td>{{ row.input }}</td>
+                                    <td>{{ row.simplified }}</td>
+                                    <td class="{% if row.match %}ok{% else %}fail{% endif %}">{% if row.match %}Si{%
+                                        else %}No{% endif %}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+                {% endif %}
+
+                {% if result.trace %}
+                <article class="trace card-main">
+                    <h2>Trazabilidad</h2>
+                    <ol>
+                        {% for step in result.trace %}
+                        <li>
+                            <h3>{{ step.title }}</h3>
+                            <p><strong>Expresion:</strong> {{ step.expression }}</p>
+                            <p><strong>Ley:</strong> {{ step.law }}</p>
+                        </li>
+                        {% endfor %}
+                    </ol>
+                </article>
+                {% endif %}
+            </section>
+            {% endif %}
+        </main>
+    </div>
 </body>
 
 </html>
