@@ -1,0 +1,153 @@
+:root {
+    --bg: #f7f3e8;
+    --paper: #fffaf0;
+    --ink: #1e1b16;
+    --muted: #5d5245;
+    --accent: #b3472f;
+    --accent-soft: #f2d7b3;
+    --danger: #8d1f1f;
+    --shadow: 0 12px 30px rgba(40, 27, 16, 0.14);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Source Serif 4", Georgia, serif;
+    color: var(--ink);
+    background:
+        radial-gradient(circle at 10% 10%, #f1debf 0%, transparent 35%),
+        radial-gradient(circle at 80% 20%, #f7c8ad 0%, transparent 28%),
+        linear-gradient(145deg, #f8f6ef 0%, #efe5d0 50%, #f7f2e3 100%);
+}
+
+.container {
+    width: min(980px, 92vw);
+    margin: 2.2rem auto 3rem;
+    display: grid;
+    gap: 1rem;
+}
+
+.panel {
+    background: var(--paper);
+    border: 1px solid #e8d8bf;
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    padding: 1.2rem 1.3rem;
+    animation: rise 400ms ease;
+}
+
+.hero h1 {
+    margin: 0;
+    font-size: clamp(1.55rem, 2.5vw, 2.2rem);
+}
+
+.hero p {
+    margin: 0.65rem 0 0;
+    color: var(--muted);
+}
+
+label {
+    font-weight: 700;
+    display: block;
+    margin-bottom: 0.45rem;
+}
+
+textarea {
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid #c8b79d;
+    min-height: 115px;
+    padding: 0.85rem;
+    font: 500 1rem/1.4 "Fira Code", Consolas, monospace;
+    background: #fffdf6;
+}
+
+textarea:focus {
+    outline: 2px solid #f1b86f;
+    border-color: #a77d3f;
+}
+
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0.9rem 0;
+    font-weight: 600;
+}
+
+button {
+    border: none;
+    border-radius: 999px;
+    padding: 0.72rem 1.35rem;
+    background: linear-gradient(90deg, #9f3523, #c35f2a);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 120ms ease, filter 120ms ease;
+}
+
+button:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.06);
+}
+
+.output .final-expression {
+    font-family: "Fira Code", Consolas, monospace;
+    color: #7f2e12;
+    font-size: 1.08rem;
+    font-weight: 700;
+}
+
+.trace ol {
+    margin: 0.5rem 0 0;
+    padding-left: 1.25rem;
+}
+
+.trace li {
+    margin-bottom: 0.8rem;
+    background: var(--accent-soft);
+    border-radius: 12px;
+    padding: 0.6rem 0.75rem;
+}
+
+.trace h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.trace p {
+    margin: 0.28rem 0 0;
+}
+
+.error {
+    border-color: #edc8c8;
+    background: #fff3f3;
+    color: var(--danger);
+}
+
+@keyframes rise {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 640px) {
+    .container {
+        width: 95vw;
+        margin-top: 1.2rem;
+    }
+
+    .panel {
+        padding: 1rem;
+        border-radius: 14px;
+    }
+}

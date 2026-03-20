@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reduccion de Expresiones Booleanas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+    <main class="container">
+        <section class="panel hero">
+            <h1>Reduccion de Expresiones Booleanas</h1>
+            <p>Ingresa una expresion con entre 6 y 10 variables y obten su forma minima equivalente.</p>
+        </section>
+
+        <section class="panel form-panel">
+            <form method="post">
+                <label for="expression">Expresion booleana</label>
+                <textarea id="expression" name="expression" rows="5"
+                    placeholder="Ejemplo: F = A.B.C + A.B.C' + D.E.F + D.E.F'" required>{{ expression }}</textarea>
+
+                <label class="checkbox-row" for="show_trace">
+                    <input type="checkbox" id="show_trace" name="show_trace" {% if show_trace %}checked{% endif %}>
+                    Mostrar trazabilidad paso a paso
+                </label>
+
+                <button type="submit">Simplificar</button>
+            </form>
+        </section>
+
+        {% if error %}
+        <section class="panel error">
+            <strong>Error:</strong>
+            <p>{{ error }}</p>
+        </section>
+        {% endif %}
+
+        {% if result %}
+        <section class="panel output">
+            <h2>Resultado</h2>
+            <p><strong>Variables detectadas:</strong> {{ result.variables | join(', ') }}</p>
+            <p><strong>Entrada:</strong> {{ result.input_expression }}</p>
+            <p><strong>Expresion simplificada:</strong> <span class="final-expression">{{ result.simplified_expression
+                    }}</span></p>
+        </section>
+
+        {% if result.trace %}
+        <section class="panel trace">
+            <h2>Trazabilidad</h2>
+            <ol>
+                {% for step in result.trace %}
+                <li>
+                    <h3>{{ step.title }}</h3>
+                    <p><strong>Expresion:</strong> {{ step.expression }}</p>
+                    <p><strong>Ley aplicada:</strong> {{ step.law }}</p>
+                </li>
+                {% endfor %}
+            </ol>
+        </section>
+        {% endif %}
+        {% endif %}
+    </main>
+</body>
+
+</html>
